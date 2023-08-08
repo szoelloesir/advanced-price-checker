@@ -1,27 +1,35 @@
 import { CandleData } from "../models/candleData";
 
 export interface ICandleDataBase{
-    saveData(data: CandleData[]): void;
-    loadLast10Candle(): CandleData[];
+    saveData(symbol: string, data: CandleData[]): void; // TODO: Change to promise if real db is used
+    loadLast10Candle(symbol: string): CandleData[] | undefined ; // TODO: Change to promise if real db is used
 }
 
 class InMemoryCandleDataBase implements ICandleDataBase{
-    private timeOrderedData: CandleData[] = [];
+    private timeOrderedData: Map<string, CandleData[]> = new Map();
 
-    get actualLastTimeOfData(): number {        
-        return this.timeOrderedData.length > 0
-        ? this.timeOrderedData.slice(-1)[0].time
+    getActualLastTimeOfData(symbol: string): number {
+        const dataForSymbol = this.timeOrderedData.get(symbol);
+
+        return dataForSymbol && dataForSymbol.length > 0
+        ? dataForSymbol.slice(-1)[0].time
         : 0;
     }
 
-    saveData(data: CandleData[]): void {
-        const dataToPush = data.filter(candle => candle.time > this.actualLastTimeOfData).sort((a, b) => a.time - b.time);
+    saveData(symbol: string, data: CandleData[]): void {
+        const dataToPush = data.filter(candle => candle.time > this.getActualLastTimeOfData(symbol)).sort((a, b) => a.time - b.time);
+
+        if(this.timeOrderedData.has(symbol))
+        {
+            const dataForSymbol = this.timeOrderedData.get(symbol)!;
+            dataForSymbol.push(...dataToPush);
+        }
         
-        this.timeOrderedData.push(...dataToPush);
+        this.timeOrderedData.set(symbol, dataToPush);
     }
 
-    loadLast10Candle(): CandleData[] {
-        return this.timeOrderedData.slice(-10)
+    loadLast10Candle(symbol: string): CandleData[] | undefined {
+        return this.timeOrderedData.get(symbol)?.slice(-10)
     }    
 }
 

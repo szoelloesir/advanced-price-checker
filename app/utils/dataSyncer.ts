@@ -33,7 +33,7 @@ class DataSyncer implements IDataSyncer{
             }
         }).then(data => this.convertToDto(data.data)); //TODO: error handling
         
-        this.candleDataBase.saveData(response);
+        this.candleDataBase.saveData(symbol, response);
     }
 
     convertToDto(data: FinnHubCandleData): CandleData[]{
