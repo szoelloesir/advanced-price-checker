@@ -1,12 +1,25 @@
 import axios from "axios";
 import { MilisecondsInDay } from "./constants";
+import environment from "../config/environment";
+import { convertToSeconds } from "./converter";
+import { CandleData } from "../models/candleData";
 
 export interface IDataSyncer{
     syncData(symbol: string): Promise<void>;
 }
 
-class DataSyncer implements IDataSyncer{
+interface FinnHubCandleData{
+    c:number[],
+    h:number[],
+    l:number[],
+    o:number[],
+    s:string,
+    t:number[],
+    v:number[]
+}
 
+
+class DataSyncer implements IDataSyncer{
     constructor(private apiEndpoint: string, private apiToken: string){}
 
     async syncData(symbol: string): Promise<void> {
@@ -15,12 +28,27 @@ class DataSyncer implements IDataSyncer{
             symbol: symbol,
             resolution: 5,
             token: this.apiToken,
-            from: Math.floor((Date.now() - MilisecondsInDay) / 1000),
-            to: Math.floor(Date.now() / 1000)
-        }
-    });
-    }// TODO: Implement parse and save of the data
-    // TODO: Implement a way to find last 10 data points and that also works all day
+            from: convertToSeconds(Date.now() - MilisecondsInDay),
+            to: convertToSeconds(Date.now())
+            }
+        }).then(data => this.convertToDto(data.data)); //TODO: error handling
+        console.log(response);
+    }
+
+    convertToDto(data: FinnHubCandleData){
+        const result: CandleData[] = [];
+        data.t.forEach((element, index) => {
+            result.push({
+                time: element,
+                close: data.c[index],
+                height: data.h[index],
+                low: data.l[index],
+                open: data.o[index],
+                volume: data.v[index]
+            })
+        });
+        return result;
+    }
 }
 
 
