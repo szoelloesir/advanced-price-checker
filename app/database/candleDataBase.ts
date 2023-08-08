@@ -23,6 +23,7 @@ class InMemoryCandleDataBase implements ICandleDataBase{
         {
             const dataForSymbol = this.timeOrderedData.get(symbol)!;
             dataForSymbol.push(...dataToPush);
+            return;
         }
         
         this.timeOrderedData.set(symbol, dataToPush);
