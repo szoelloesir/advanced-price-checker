@@ -3,6 +3,7 @@ import { MilisecondsInDay } from "./constants";
 import environment from "../config/environment";
 import { convertToSeconds } from "./converter";
 import { CandleData } from "../models/candleData";
+import CandleDataBase, { ICandleDataBase } from "../database/candleDataBase";
 
 export interface IDataSyncer{
     syncData(symbol: string): Promise<void>;
@@ -18,9 +19,8 @@ interface FinnHubCandleData{
     v:number[]
 }
 
-
 class DataSyncer implements IDataSyncer{
-    constructor(private apiEndpoint: string, private apiToken: string){}
+    constructor(private candleDataBase: ICandleDataBase, private apiEndpoint: string, private apiToken: string){}
 
     async syncData(symbol: string): Promise<void> {
         const response = await axios.get(this.apiEndpoint, {
@@ -32,10 +32,11 @@ class DataSyncer implements IDataSyncer{
             to: convertToSeconds(Date.now())
             }
         }).then(data => this.convertToDto(data.data)); //TODO: error handling
-        console.log(response);
+        
+        this.candleDataBase.saveData(response);
     }
 
-    convertToDto(data: FinnHubCandleData){
+    convertToDto(data: FinnHubCandleData): CandleData[]{
         const result: CandleData[] = [];
         data.t.forEach((element, index) => {
             result.push({
@@ -51,7 +52,6 @@ class DataSyncer implements IDataSyncer{
     }
 }
 
-
-const dataSyncer: IDataSyncer = new DataSyncer('https://finnhub.io/api/v1/stock/candle', environment.token);
+const dataSyncer: IDataSyncer = new DataSyncer(CandleDataBase, 'https://finnhub.io/api/v1/stock/candle', environment.token);
 
 export default dataSyncer;
