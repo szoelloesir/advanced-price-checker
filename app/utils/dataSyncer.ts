@@ -23,6 +23,7 @@ class DataSyncer implements IDataSyncer{
     // TODO: Implement a way to find last 10 data points and that also works all day
 }
 
-const dataSyncer: IDataSyncer = new DataSyncer('https://finnhub.io/api/v1/stock/candle', ''); // TODO: Use env for token
+
+const dataSyncer: IDataSyncer = new DataSyncer('https://finnhub.io/api/v1/stock/candle', environment.token);
 
 export default dataSyncer;
